@@ -41,8 +41,7 @@ jobs:
       - name: Run Semgrep 
         uses: returntocorp/semgrep-action@v1
 
-        sonarqube:
-
+      
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v7.1.0
         env:
