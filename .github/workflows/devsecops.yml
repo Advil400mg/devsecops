@@ -22,7 +22,7 @@ jobs:
       - name: Scan Docker image
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-          aquasec/trivy image app:latest
+          aquasec/trivy:0.69.3 image app:latest
 
       - name: Checkout 
         uses: actions/checkout@v3
