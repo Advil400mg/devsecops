@@ -7,7 +7,7 @@ dir = os.path.dirname(__file__)
 
 # Load data
 try:
-    with open(os.path.join(dir,"report.json")) as f:
+    with open(os.path.join(dir,"sonar-report.json")) as f:
         data = json.load(f)
 except:
     ...
