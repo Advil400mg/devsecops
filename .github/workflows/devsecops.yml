@@ -72,7 +72,7 @@ jobs:
           path: tools/generate_report/report.pdf
 
       - name: Send email
-        uses: devellany/send-mailer@v1.0.2
+        uses: devellany/send-mail@v1.0.2
         with:
           host: smtp.google.com
           # Optional port (defaults to 465)
