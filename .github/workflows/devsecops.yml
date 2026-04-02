@@ -74,7 +74,7 @@ jobs:
       - name: Send email
         uses: devellany/send-mail@v1.0.2
         with:
-          host: smtp.google.com
+          host: smtp.gmail.com
           # Optional port (defaults to 465)
           port: 465
           account: ${{secrets.ACCOUNT}}
