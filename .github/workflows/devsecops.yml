@@ -71,6 +71,24 @@ jobs:
           name: sonar-report
           path: tools/generate_report/report.pdf
 
+      - name: Send email
+        uses: devellany/send-mailer@v1.0.2
+        with:
+          host: smtp.google.com
+          # Optional port (defaults to 465)
+          port: 465
+          account: ${{secrets.ACCOUNT}}
+          password: ${{secrets.MAIL_PASSWORD}}
+          sender: devellany
+          from: ${{secrets.ACCOUNT}}
+          to: ${{secrets.ACCOUNT}}
+          subject: Sonarqube results
+          body: Find attached the pdf report from sonarqube;
+          # Optional content type (defaults to text/plain)
+          contentType: text/plain
+          # Optional attachment files (JSON type. require property 'path')
+          attachments: '[{"path":"tools/generate_report/report.pdf"}]'
+
       # - name: Upload Sonar report
       #   uses: actions/upload-artifact@v4
       #   with:
