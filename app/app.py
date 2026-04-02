@@ -22,8 +22,9 @@ def login():
     conn = get_db()
     cursor = conn.cursor()
 
-    query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
-    cursor.execute(query)
+    query = """SELECT * FROM users WHERE username = (?) AND password = (?)"""
+    value = (username, password,)
+    cursor.execute(query,value)
 
     user = cursor.fetchone()
     conn.close()
