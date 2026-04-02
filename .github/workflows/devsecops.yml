@@ -50,7 +50,7 @@ jobs:
       - name: Get Sonar issues
         run: |
           curl -u ${{ secrets.SONAR_TOKEN }}: \
-          "https://sonarcloud.io/api/issues/search?componentKey=Advil400mg_devsecops" \
+          "https://sonarcloud.io/api/issues/search?componentKeys=Advil400mg_devsecops" \
           -o sonar-report.json
 
       - name: Upload Sonar report
