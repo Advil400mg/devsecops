@@ -33,13 +33,13 @@ jobs:
 
       
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r app/requirements.txt
+      # - name: Install dependencies
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install -r app/requirements.txt
 
-      - name: Run Semgrep 
-        uses: returntocorp/semgrep-action@v1
+      # - name: Run Semgrep 
+      #   uses: returntocorp/semgrep-action@v1
 
       
       - name: SonarQube Scan
@@ -51,13 +51,22 @@ jobs:
         run: |
           curl -u ${{ secrets.SONAR_TOKEN }}: \
           "https://sonarcloud.io/api/issues/search?componentKeys=Advil400mg_devsecops" \
-          -o sonar-report.json
+          -o tools/generate_report/sonar-report.json
+
+      - name: Generate PDF report
+        run: python tools/generate_report/generate.py
 
       - name: Upload Sonar report
         uses: actions/upload-artifact@v4
         with:
           name: sonar-report
-          path: sonar-report.json
+          path: tools/generate_report/report.pdf
+
+      # - name: Upload Sonar report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: sonar-report
+      #     path: sonar-report.json
 
     
 
