@@ -105,7 +105,7 @@ styles.add(ParagraphStyle(
 # ======================
 # 📄 PDF INIT
 # ======================
-doc = SimpleDocTemplate(os.path.join(dir, "consolidated_security_report.pdf"))
+doc = SimpleDocTemplate(os.path.join(dir, "scans-report.pdf"))
 content = []
 
 # ======================
