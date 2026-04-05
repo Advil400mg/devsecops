@@ -44,6 +44,11 @@ def add_title(text):
     content.append(Paragraph(f"<b>{text}</b>", styles["Title"]))
     content.append(Spacer(1, 12))
 
+
+def add_chapter(text):
+    content.append(Paragraph(f"<b>{text}</b>", styles["Heading1"]))
+    content.append(Spacer(1, 11))
+
 def add_section(text):
     content.append(Paragraph(f"<b>{text}</b>", styles["Heading2"]))
     content.append(Spacer(1, 10))
@@ -70,7 +75,8 @@ def print_issues(title, issues_list):
     for i in issues_list:
         add_text(
             f"[{i['severity']}] {i['component']}:{i.get('line','?')}<br/>"
-            f"{i['message']}"
+            f"{i['message']}<br/>"
+            f"Issue on {i['impacts']['softwareQuality']} with severity {i['impacts']['severity']}"
         )
 
 # Sections
@@ -78,6 +84,20 @@ print_issues("Critical Issues (BLOCKER)", blockers)
 print_issues("Medium Issues (MAJOR)", majors)
 print_issues("Low Issues (MINOR)", minors)
 
+
+open_issues = [i for i in issues if i["status"] == "CLOSED"]
+
+
+# Split by severity
+blockers = [i for i in open_issues if i["severity"] == "BLOCKER"]
+majors = [i for i in open_issues if i["severity"] == "MAJOR"]
+minors = [i for i in open_issues if i["severity"] == "MINOR"]
+
+add_chapter("Resolved issues")
+# Sections
+print_issues("Critical Issues (BLOCKER)", blockers)
+print_issues("Medium Issues (MAJOR)", majors)
+print_issues("Low Issues (MINOR)", minors)
 # Build PDF
 doc.build(content)
 
