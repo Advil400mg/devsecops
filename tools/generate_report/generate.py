@@ -1,108 +1,123 @@
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
 import json
 import os
 
+# Configuration des chemins
 dir = os.path.dirname(__file__)
+json_path = os.path.join(dir, "sonar-report.json")
+pdf_path = os.path.join(dir, "enhanced-report.pdf")
 
-# Load data
+### 1. Chargement et Traitement des Données
 try:
-    with open(os.path.join(dir,"sonar-report.json")) as f:
+    with open(json_path) as f:
         data = json.load(f)
-except:
-    ...
+except Exception as e:
+    print(f"Erreur de lecture : {e}")
+    exit()
 
-
-issues = data["issues"]
-
-# Filter open issues
+issues = data.get("issues", [])
 open_issues = [i for i in issues if i["status"] == "OPEN"]
+closed_issues = [i for i in issues if i["status"] == "CLOSED"]
 
-# Score calculation
+# Calcul du score et des statistiques [1, 2]
 score = 100
+total_effort = 0
 for issue in open_issues:
-    if issue["severity"] == "BLOCKER":
-        score -= 30
-    elif issue["severity"] == "MAJOR":
-        score -= 10
-    elif issue["severity"] == "MINOR":
-        score -= 2
-
+    effort_min = int(issue.get("effort", "0min").replace("min", "")) # [3, 4]
+    total_effort += effort_min
+    if issue["severity"] == "BLOCKER": score -= 30
+    elif issue["severity"] == "MAJOR": score -= 10
+    elif issue["severity"] == "MINOR": score -= 2
 score = max(score, 0)
 
-# Split by severity
-blockers = [i for i in open_issues if i["severity"] == "BLOCKER"]
-majors = [i for i in open_issues if i["severity"] == "MAJOR"]
-minors = [i for i in open_issues if i["severity"] == "MINOR"]
-
-# PDF
-doc = SimpleDocTemplate(os.path.join(dir,"report.pdf"))
+### 2. Configuration du PDF
+doc = SimpleDocTemplate(pdf_path, pagesize=A4)
 styles = getSampleStyleSheet()
 content = []
 
-def add_title(text):
-    content.append(Paragraph(f"<b>{text}</b>", styles["Title"]))
+# Styles personnalisés
+title_style = ParagraphStyle('CustomTitle', parent=styles['Title'], fontSize=24, spaceAfter=20, textColor=colors.navy)
+header_style = ParagraphStyle('CustomHeader', parent=styles['Heading1'], fontSize=16, spaceAfter=10, color=colors.darkblue)
+
+def add_spacer():
     content.append(Spacer(1, 12))
 
+### 3. Fonctions de Construction
+def create_summary_table():
+    """Crée un tableau récapitulatif visuel."""
+    table_data = [
+        ["Indicateur", "Valeur"],
+        ["Score de Sécurité", f"{score}/100"],
+        ["Total des problèmes", len(issues)],
+        ["Problèmes Ouverts", len(open_issues)],
+        ["Dette technique (Effort)", f"{total_effort} min"],
+        ["Problèmes Résolus", len(closed_issues)]
+    ]
+    t = Table(table_data, colWidths=[6*cm, 4*cm])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('TEXTCOLOR', (1, 1), (1, 1), colors.red if score < 50 else colors.green),
+    ]))
+    content.append(t)
 
-def add_chapter(text):
-    content.append(Paragraph(f"<b>{text}</b>", styles["Heading1"]))
-    content.append(Spacer(1, 11))
-
-def add_section(text):
-    content.append(Paragraph(f"<b>{text}</b>", styles["Heading2"]))
-    content.append(Spacer(1, 10))
-
-def add_text(text):
-    content.append(Paragraph(text, styles["Normal"]))
-    content.append(Spacer(1, 8))
-
-# Title
-add_title("DevSecOps Security Report")
-
-# Summary
-add_section("Summary")
-add_text(f"Total issues: {len(issues)}")
-add_text(f"Open issues: {len(open_issues)}")
-add_text(f"Security Score: {score}/100")
-
-# Function to print issues
-def print_issues(title, issues_list):
-    add_section(title)
+def print_enhanced_issues(title, issues_list, color):
+    """Affiche les problèmes sous forme de blocs d'information riches."""
+    content.append(Paragraph(title, header_style))
     if not issues_list:
-        add_text("No issues")
+        content.append(Paragraph("Aucun problème détecté.", styles["Normal"]))
         return
+
     for i in issues_list:
-        add_text(
-            f"[{i['severity']}] {i['component']}:{i.get('line','?')}<br/>"
-            f"{i['message']}"
-        )
-        #f"Issue on {i['impacts']['softwareQuality']} with severity {i['impacts']['severity']}"
-        for elm in i['impacts']:
-            add_text(
-                f"Impact on {elm['softwareQuality']} with severity {elm['severity']}"
-            )
+        # Extraction des impacts [5, 6]
+        impacts_str = ", ".join([f"{elm['softwareQuality']} ({elm['severity']})" for elm in i.get('impacts', [])])
+        
+        # Données du problème [3, 7-9]
+        issue_info = [
+            [Paragraph(f"<b>{i['message']}</b>", styles["Normal"])],
+            [f"Composant : {i['component']} (Ligne {i.get('line', 'N/A')})"],
+            [f"Type : {i.get('type', 'N/A')} | Effort : {i.get('effort', 'N/A')}"],
+            [f"Impacts : {impacts_str}"]
+        ]
+        
+        t = Table(issue_info, colWidths=[16*cm])
+        t.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 1, color),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('BACKGROUND', (0, 0), (0, 0), colors.whitesmoke),
+        ]))
+        content.append(t)
+        add_spacer()
 
-# Sections
-print_issues("Critical Issues (BLOCKER)", blockers)
-print_issues("Medium Issues (MAJOR)", majors)
-print_issues("Low Issues (MINOR)", minors)
+### 4. Génération du contenu
+content.append(Paragraph("Rapport de Sécurité DevSecOps", title_style))
+content.append(Paragraph(f"Date du rapport : 2026-04-05", styles["Normal"]))
+add_spacer()
 
+content.append(Paragraph("Résumé Exécutif", styles["Heading2"]))
+create_summary_table()
+add_spacer()
 
-open_issues = [i for i in issues if i["status"] == "CLOSED"]
-
-
-# Split by severity
+# Sections par sévérité [10]
 blockers = [i for i in open_issues if i["severity"] == "BLOCKER"]
 majors = [i for i in open_issues if i["severity"] == "MAJOR"]
 minors = [i for i in open_issues if i["severity"] == "MINOR"]
 
-add_chapter("Resolved issues")
-# Sections
-print_issues("Critical Issues (BLOCKER)", blockers)
-print_issues("Medium Issues (MAJOR)", majors)
-print_issues("Low Issues (MINOR)", minors)
-# Build PDF
-doc.build(content)
+print_enhanced_issues("🚨 Problèmes Critiques (BLOCKER)", blockers, colors.red)
+print_enhanced_issues("⚠️ Problèmes Majeurs (MAJOR)", majors, colors.orange)
+print_enhanced_issues("ℹ️ Problèmes Mineurs (MINOR)", minors, colors.blue)
 
-print("✅ PDF generated")
+content.append(PageBreak())
+content.append(Paragraph("Historique des Corrections", styles["Heading1"]))
+print_enhanced_issues("✅ Problèmes Résolus", closed_issues, colors.green)
+
+### 5. Construction finale [11]
+doc.build(content)
+print(f"✅ Rapport amélioré généré : {pdf_path}")
