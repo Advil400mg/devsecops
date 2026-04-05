@@ -75,9 +75,13 @@ def print_issues(title, issues_list):
     for i in issues_list:
         add_text(
             f"[{i['severity']}] {i['component']}:{i.get('line','?')}<br/>"
-            f"{i['message']}<br/>"
-            f"Issue on {i['impacts']['softwareQuality']} with severity {i['impacts']['severity']}"
+            f"{i['message']}"
         )
+        #f"Issue on {i['impacts']['softwareQuality']} with severity {i['impacts']['severity']}"
+        for elm in i['impacts']:
+            add_text(
+                f"Impact on {elm['softwareQuality']} with severity {elm['severity']}""
+            )
 
 # Sections
 print_issues("Critical Issues (BLOCKER)", blockers)
