@@ -80,7 +80,7 @@ def print_issues(title, issues_list):
         #f"Issue on {i['impacts']['softwareQuality']} with severity {i['impacts']['severity']}"
         for elm in i['impacts']:
             add_text(
-                f"Impact on {elm['softwareQuality']} with severity {elm['severity']}""
+                f"Impact on {elm['softwareQuality']} with severity {elm['severity']}"
             )
 
 # Sections
