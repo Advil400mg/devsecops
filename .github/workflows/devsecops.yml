@@ -27,9 +27,11 @@ jobs:
         run: docker build -t app:latest .
 
       - name: Scan Docker image
-        run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-          aquasec/trivy:0.69.3 -f json -o tools/generate_report/trivy-report image app:latest
+        uses: aquasecurity/trivy-action@v0.20.0
+        with:
+          image-ref: 'app:latest'
+          format: 'json'
+          output: 'tools/generate_report/trivy.json'
         
       # - name: Upload Trivy report
       #   uses: actions/upload-artifact@v4
