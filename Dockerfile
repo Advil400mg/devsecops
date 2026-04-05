@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM cgr.dev/chainguard/python:3.12
 
 WORKDIR /app
 
