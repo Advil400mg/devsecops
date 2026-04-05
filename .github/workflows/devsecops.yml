@@ -29,13 +29,13 @@ jobs:
       - name: Scan Docker image
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-          aquasec/trivy:0.69.3 -f json -o tools/generate_report/trivy.json image app:latest
+          aquasec/trivy:0.69.3 -f json -o tools/generate_report/trivy-report image app:latest
         
-      - name: Upload Trivy report
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy_report
-          path: tools/generate_report/trivy.json
+      # - name: Upload Trivy report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: trivy_report
+      #     path: tools/generate_report/trivy-report.json
       
 
       - name: Install dependencies
@@ -70,11 +70,11 @@ jobs:
       - name: Generate PDF report
         run: python tools/generate_report/generate.py
 
-      - name: Upload Sonar report
+      - name: Upload PDF report
         uses: actions/upload-artifact@v4
         with:
-          name: sonar-report
-          path: tools/generate_report/report.pdf
+          name: Report
+          path: tools/generate_report/scans-report.pdf
 
       - name: Send email
         uses: devellany/send-mail@v1.0.2
@@ -87,12 +87,12 @@ jobs:
           sender: devellany
           from: ${{secrets.ACCOUNT}}
           to: ${{secrets.ACCOUNT}}
-          subject: Sonarqube results
-          body: Find attached the pdf report from sonarqube;
+          subject: PIPELINE PDF Report
+          body: Find attached the pdf report from sonarqube and trivy.
           # Optional content type (defaults to text/plain)
           contentType: text/plain
           # Optional attachment files (JSON type. require property 'path')
-          attachments: '[{"path":"tools/generate_report/report.pdf"}]'
+          attachments: '[{"path":"tools/generate_report/scans-report.pdf"}]'
 
       # - name: Upload Sonar report
       #   uses: actions/upload-artifact@v4
