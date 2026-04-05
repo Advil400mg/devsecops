@@ -9,7 +9,7 @@ import os
 # Configuration des chemins
 dir = os.path.dirname(__file__)
 json_path = os.path.join(dir, "sonar-report.json")
-pdf_path = os.path.join(dir, "enhanced-report.pdf")
+pdf_path = os.path.join(dir, "report.pdf")
 
 ### 1. Chargement et Traitement des Données
 try:
