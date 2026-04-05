@@ -75,7 +75,7 @@ jobs:
       - name: Upload PDF report
         uses: actions/upload-artifact@v4
         with:
-          name: Report
+          name: scans-report
           path: tools/generate_report/scans-report.pdf
 
       - name: Send email
