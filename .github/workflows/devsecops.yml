@@ -60,6 +60,10 @@ jobs:
       - name: Run SonarQube Scan
         if: steps.changes.output.src == 'true'
         uses: SonarSource/sonarqube-scan-action@v7.1.0
+        with:
+          filters: |
+            src:
+              - 'app/**'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 

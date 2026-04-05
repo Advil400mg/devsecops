@@ -6,7 +6,45 @@ from reportlab.lib import colors
 import json
 import os
 from datetime import datetime
+from collections import defaultdict
 
+def render_cve_section(title, cve_map):
+    if not cve_map:
+        return False
+
+    add_text(f"<b>{title}</b>")
+
+    for cve_id, data in cve_map.items():
+        color = severity_color(data["Severity"])
+
+        pkgs = ", ".join(sorted(data["Packages"]))
+
+        add_text(
+            f"<font color='{color.hexval()}'><b>[{data['Severity']}] {cve_id}</b></font><br/>"
+            f"{pkgs}<br/>"
+            f"<font size=7>{data['Title']}</font>"
+        )
+    return True
+
+def group_by_cve(vulns):
+    cve_map = defaultdict(lambda: {
+        "Severity": None,
+        "Packages": set(),
+        "Title": ""
+    })
+
+    for v in vulns:
+        cve_id = v.get("VulnerabilityID")
+        if not cve_id:
+            continue
+
+        cve_map[cve_id]["Severity"] = v.get("Severity")
+        cve_map[cve_id]["Title"] = v.get("Title", "")
+
+        pkg = f"{v.get('PkgName')}:{v.get('InstalledVersion')}"
+        cve_map[cve_id]["Packages"].add(pkg)
+
+    return cve_map
 dir = os.path.dirname(__file__)
 
 # ======================
@@ -65,6 +103,10 @@ for result in trivy_data.get("Results", []):
 trivy_critical = [v for v in vulnerabilities if v["Severity"] == "CRITICAL"]
 trivy_high = [v for v in vulnerabilities if v["Severity"] == "HIGH"]
 trivy_medium = [v for v in vulnerabilities if v["Severity"] == "MEDIUM"]
+
+critical_map = group_by_cve(trivy_critical)
+high_map = group_by_cve(trivy_high)
+medium_map = group_by_cve(trivy_medium)
 
 # ======================
 # 🎨 STYLES
@@ -185,29 +227,15 @@ add_separator()
 # ======================
 add_section("🔥 CRITICAL & HIGH VULNERABILITIES")
 
-if trivy_critical or trivy_high:
-    for v in trivy_critical + trivy_high:
-        color = severity_color(v["Severity"])
-        add_text(
-            f"<font color='{color.hexval()}'><b>[{v['Severity']}]</b></font> "
-            f"{v['PkgName']}:{v['InstalledVersion']} → {v['VulnerabilityID']}<br/>"
-            f"<font size=7>{v.get('Title','')}</font>"
-        )
-else:
-    add_text("No critical/high vulnerabilities detected.")
+has_critical = render_cve_section("🔥 CRITICAL VULNERABILITIES", critical_map)
+has_high = render_cve_section("⚠️ HIGH VULNERABILITIES", high_map)
 
 add_separator()
 
 add_section("⚠️ MEDIUM VULNERABILITIES")
 
-if trivy_medium:
-    for v in trivy_medium[:30]:
-        add_text(
-            f"[MEDIUM] {v['PkgName']} → {v['VulnerabilityID']}",
-            mono=True
-        )
-else:
-    add_text("No medium vulnerabilities.")
+has_medium = render_cve_section("⚠️ HIGH VULNERABILITIES", medium_map)
+
 
 add_separator()
 content.append(PageBreak())
