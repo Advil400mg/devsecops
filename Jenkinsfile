@@ -36,7 +36,9 @@ pipeline {
 
         APP_CHANGED = 'true'
         PYTHONUNBUFFERED = '1'
+
     }
+
 
     stages {
         stage('Checkout') {
@@ -66,9 +68,12 @@ pipeline {
 
                     trivy image \
                         --exit-code 0 \
+                        --severity MEDIUM,HIGH,CRITICAL \
                         --format json \
                         --output "$REPORT_DIR/trivy-report.json" \
                         "$IMAGE_REF"
+
+                    test -s "$REPORT_DIR/trivy-report.json"
                 '''
             }
         }
