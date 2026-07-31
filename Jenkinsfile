@@ -234,42 +234,39 @@ pipeline {
             }
         }
 
-        stage('Archive PDF report') {
+        stage('Archive and send report') {
             steps {
+                sh '''
+                    set -eu
+                    test -s "$REPORT_DIR/scans-report.pdf"
+                    ls -lh "$REPORT_DIR/scans-report.pdf"
+                '''
+
                 archiveArtifacts(
-                    artifacts:
-                        'tools/generate_report/scans-report.pdf',
+                    artifacts: 'tools/generate_report/scans-report.pdf',
                     fingerprint: true
                 )
-            }
-        }
 
-        stage('Send email') {
-            steps {
                 emailext(
                     to: params.REPORT_EMAIL,
+                    subject: "PIPELINE PDF Report - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: """The DevSecOps pipeline completed successfully.
 
-                    subject:
-                        "PIPELINE PDF Report - " +
-                        "${env.JOB_NAME} #${env.BUILD_NUMBER}",
+        The SonarCloud and Trivy PDF report is attached.
 
-                    body:
-                        """The DevSecOps pipeline completed successfully.
-
-The SonarCloud and Trivy PDF report is attached.
-
-Jenkins job: ${env.JOB_NAME}
-Build number: ${env.BUILD_NUMBER}
-Build URL: ${env.BUILD_URL}
-""",
-
+        Jenkins job: ${env.JOB_NAME}
+        Build number: ${env.BUILD_NUMBER}
+        Build URL: ${env.BUILD_URL}
+        """,
                     mimeType: 'text/plain',
-
-                    attachmentsPattern:
-                        'tools/generate_report/scans-report.pdf'
+                    attachmentsPattern: 'tools/generate_report/scans-report.pdf'
                 )
             }
         }
+
+
+
+
     }
 
     post {
